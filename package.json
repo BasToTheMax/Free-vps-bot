@@ -1,0 +1,28 @@
+{
+    "name": "container",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "dayjs": "^1.11.10",
+      "discord.js": "^14.14.1",
+      "generate-password": "^1.7.1",
+      "google-sr": "^3.2.1",
+      "mongoose": "^8.1.1",
+      "node-ssh": "^13.1.0",
+      "nodemon": "^3.0.3",
+      "pm2": "^5.3.1",
+      "proxmox-api": "^1.1.0",
+      "random-ip": "^0.0.1",
+      "simple-ssh": "^1.1.1",
+      "slashctrl": "^0.2.0",
+      "ssh2": "^1.15.0"
+    }
+  }
+  
