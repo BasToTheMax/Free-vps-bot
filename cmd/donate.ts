@@ -1,6 +1,5 @@
-// import { SlashCommand } from "slashctrl";
-
 const { SlashCommand } = require('slashctrl');
+const fs = require('fs');
 
 class CMD extends SlashCommand {
 

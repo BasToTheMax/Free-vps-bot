@@ -95,11 +95,17 @@ class CMD extends SlashCommand {
         cOut = '';
 
         var ip = randomip('10.5.0.0', 16);
+
+        const rand = (min, max) => {
+            return Math.round(Math.random() * (max - min)) + min;
+        }
+        var rCm;
+        rCm = rand(100000, 999999);
         
         const conn = new Client();
         conn.on('ready', () => {
           console.log('Client :: ready');
-          conn.exec(`/usr/bin/bash /root/make/free.sh ${pass} ${ip}`, (err, stream) => {
+          conn.exec(`/usr/bin/bash /root/make/free.sh ${pass} ${ip} ${rCm}`, (err, stream) => {
             if (err) throw err;
             stream.on('close', (code, signal) => {
               console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);
@@ -144,13 +150,15 @@ class CMD extends SlashCommand {
                         ram: ram*1024,
                         cpu: cpu,
                         disk,
+
+                        hasUsed: false,
+                        usedCode: rCm,
                         
                         expiry: dayjs().add(3, 'day'),
                         cost,
 
                         proxID: proxId,
-                        ip: ip,
-                        password: pass
+                        ip: ip
                     });
                     vps.save();
                     

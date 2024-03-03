@@ -1,6 +1,7 @@
 ID=$(pvesh get /cluster/nextid)
 PASSWORD=$1
 IP=$2
+USED=$3
 echo "Creating your vps..."
 
 sleep 1
@@ -19,6 +20,26 @@ cp /etc/pve/firewall/100.fw /etc/pve/firewall/$ID.fw
 
 echo "Enabling ssh..."
 pct exec $ID bash -- -c "echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"
+
+pct exec $ID sh -- -c "echo '' > /etc/motd"
+
+pct exec $ID sh -- -c "echo '##############################' >> /etc/motd"
+pct exec $ID sh -- -c "echo '# Hosted by ErtixNodes       #' >> /etc/motd"
+pct exec $ID sh -- -c "echo '# Free VPS Hosting           #' >> /etc/motd"
+pct exec $ID sh -- -c "echo '##############################' >> /etc/motd"
+
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo 'If this is your first time using the vps:' >> /etc/motd"
+pct exec $ID sh -- -c "echo 'Please execute /used code:$(echo $USED) in the discord server.' >> /etc/motd"
+
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo 'To get started: apt update -y' >> /etc/motd"
+pct exec $ID sh -- -c "echo '> To install packages: apt install <package-name>' >> /etc/motd"
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
+pct exec $ID sh -- -c "echo '' >> /etc/motd"
 
 pct reboot $ID
 

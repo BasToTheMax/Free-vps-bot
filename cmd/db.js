@@ -25,6 +25,9 @@ const VPS = mongoose.model('VPS', {
     cpu: Number,
     disk: Number,
     
+    hasUsed: Boolean,
+    usedCode: Number,
+    
     expiry: Number, // Time to expire after lastRenew
     password: String,
     

@@ -54,7 +54,17 @@ client.on('ready', () => {
 
                 await exec('bash /root/remove.sh ' + expiredVPS.proxID);
 
-                channel.send(`VPS ${expiredVPS.proxID} expired and was deleted. <@${expiredVPS.userID}>`);
+                var r;
+                r = 'expired';
+
+                if (expiredVPS.hasUsed == false) {
+                    r = 'vps was not activated in time';
+                }
+                if (expiredVPS.hasUsed == null || expiredVPS.hasUsed == undefined) {
+                    r = 'using alpine linux. We switched back to debian because alpine was buggy, so your vps was deleted, sorry';
+                }
+
+                channel.send(`VPS ${expiredVPS.proxID} was deleted because: ${r} - <@${expiredVPS.userID}>`);
 
                 await db.VPS.deleteMany({ proxID: expiredVPS.proxID });
             }
@@ -65,7 +75,6 @@ client.on('ready', () => {
 
         // console.log('List', vps);
     }, 60 * 1000);
-
 });
 
 client.login(botToken);
