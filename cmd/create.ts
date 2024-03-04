@@ -81,10 +81,7 @@ class CMD extends SlashCommand {
     conn.on('ready', () => {
       console.log('Client :: ready');
       conn.exec(
-        `/usr/bin/bash /root/make/free.sh ${pass} ${randomip('10.5.0.0', 16)} ${rand(
-          100000,
-          999999
-        )}`,
+        `/usr/bin/bash /root/make/free.sh ${pass} ${randomip('10.5.0.0', 16)} ${usedCode}`,
         (err, stream) => {
           if (err) throw err;
           stream.on('close', (code, signal) => {
@@ -120,7 +117,7 @@ class CMD extends SlashCommand {
                 cpu: cpu,
                 disk,
                 hasUsed: false,
-                usedCode: rand(100000, 999999),
+                usedCode: usedCode,
                 expiry: dayjs().add(3, 'day'),
                 cost,
                 proxID: proxId,
