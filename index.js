@@ -1,85 +1,76 @@
 const { SlashCtrl } = require('slashctrl');
 const path = require('path');
-
+const { Client, GatewayIntentBits } = require('discord.js');
 const exec = require('./cmd/ssh');
+const db = require('./cmd/db');
 
-var log = console.log;
-
-var botToken = '';
+const botToken = '';
+const applicationId = '';
+const channelId = '1204045694164533269';
 
 const slashCtrl = new SlashCtrl({
-    token: botToken,
-    applicationId: ''
+  token: botToken,
+  applicationId: applicationId
 });
 
 slashCtrl.publishCommandsFromFolder(path.join(__dirname, 'cmd'));
 
-const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+  console.log(`Logged in as ${client.user.tag}!`);
+  startVpsExpiryCheck();
+});
 
-    const db = require('./cmd/db');
-
-    var isChecking;
-    isChecking = false;
-
-    setInterval(async () => {
-        log('> Checking vps expire');
-
-        if (isChecking == true) {
-            return console.log('already checking expire');
-        }
-
-        isChecking = true;
-
-        var vps = await db.VPS.find({
-            expiry: {
-                $lt: Date.now()
-            }
-        });
-
-        for (let ab = 0; ab < vps.length; ab++) {
-            var expiredVPS = vps[ab];
-            const channel = client.channels.cache.get('1204045694164533269');
-            if (!expiredVPS.proxID) {
-                console.log(`vps ${expiredVPS._id} does not have proxmox id`, expiredVPS);
-
-                channel.send(`<@${expiredVPS.userID}> Your vps failed to create and has been removed from the database. Try again with /create in #cmds`);
-
-                await db.VPS.deleteMany({ _id: expiredVPS._id });
-
-            } else {
-
-                await exec('bash /root/remove.sh ' + expiredVPS.proxID);
-
-                var r;
-                r = 'expired';
-
-                if (expiredVPS.hasUsed == false) {
-                    r = 'vps was not activated in time';
-                }
-                if (expiredVPS.hasUsed == null || expiredVPS.hasUsed == undefined) {
-                    r = 'using alpine linux. We switched back to debian because alpine was buggy, so your vps was deleted, sorry';
-                }
-
-                channel.send(`VPS ${expiredVPS.proxID} was deleted because: ${r} - <@${expiredVPS.userID}>`);
-
-                await db.VPS.deleteMany({ proxID: expiredVPS.proxID });
-            }
-        }
-
-        isChecking = false;
-        console.log('> Expiry check done!')
-
-        // console.log('List', vps);
-    }, 60 * 1000);
+client.on('interactionCreate', async (interaction) => {
+  console.log(`> ${interaction.user.username} -> /${interaction.commandName}`);
+  slashCtrl.handleCommands(interaction);
 });
 
 client.login(botToken);
 
-client.on('interactionCreate', async interaction => {
-    console.log(`> ${interaction.user.username} -> /${interaction.commandName}`);
-    slashCtrl.handleCommands(interaction);
-});
+async function startVpsExpiryCheck() {
+  console.log('> Starting VPS expiry check');
+  setInterval(async () => {
+    try {
+      console.log('> Checking VPS expiry');
+      const expirationThreshold = Date.now() + 3600000; // 1 hour threshold
+      const vps = await db.VPS.find({ expiry: { $lt: expirationThreshold } });
+
+      for (let i = 0; i < vps.length; i++) {
+        const expiredVPS = vps[i];
+        const channel = client.channels.cache.get(channelId);
+
+        if (!expiredVPS.proxID) {
+          console.log(`VPS ${expiredVPS._id} does not have a proxmox ID`, expiredVPS);
+          channel.send(`<@${expiredVPS.userID}> Your VPS failed to create and has been removed from the database. Try again with /create in #cmds`);
+          await db.VPS.deleteMany({ _id: expiredVPS._id });
+        } else {
+          const expirationTime = new Date(expiredVPS.expiry);
+          const timeUntilExpiry = expirationTime - Date.now();
+          const hoursUntilExpiry = Math.floor(timeUntilExpiry / 3600000);
+          let r = 'expired';
+
+          if (expiredVPS.hasUsed === false) {
+            r = 'VPS was not activated in time';
+          } else if (expiredVPS.hasUsed === null || expiredVPS.hasUsed === undefined) {
+            r = 'Using Alpine Linux. We switched back to Debian because Alpine was buggy, so your VPS was deleted. Sorry.';
+          }
+
+          if (hoursUntilExpiry <= 1) {
+            channel.send(`VPS ${expiredVPS.proxID} will be deleted soon (${hoursUntilExpiry} hour(s) remaining) because: ${r} - <@${expiredVPS.userID}>`);
+          } else {
+            channel.send(`VPS ${expiredVPS.proxID} was deleted because: ${r} - <@${expiredVPS.userID}>`);
+          }
+
+          await exec(`bash /root/remove.sh ${expiredVPS.proxID}`);
+          await db.VPS.deleteMany({ proxID: expiredVPS.proxID });
+        }
+      }
+
+      console.log('> Expiry check done!');
+    } catch (error) {
+      console.error('Error occurred during VPS expiry check:', error);
+    }
+  }, 60 * 1000);
+}
