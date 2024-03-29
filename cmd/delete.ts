@@ -65,7 +65,7 @@ class CMD extends SlashCommand {
         
        await exec(`bash /root/remove.sh ${id}`);
 
-      	var dbDel = await db.VPS.deleteOne({ _id: vps._id });
+      	var dbDel = await db.VPS.deleteMany({ proxID: id });
         
         console.log('delete', dbDel);
         
